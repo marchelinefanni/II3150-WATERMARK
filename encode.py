@@ -1,7 +1,13 @@
 import cv2
+import shutil
 import numpy as np
 
-def watermarking(height, width, k, seed):
+def watermark(image_path, k, seed):
+    # processing the image
+    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    image = np.array(image, dtype=np.int16)
+    width, height = image.shape[:2]
+    # creating watermark
     np.random.seed(seed)
     watermark = np.random.randint(2, size=(width, height))
     watermark = watermark.astype(np.int16)
@@ -9,13 +15,18 @@ def watermarking(height, width, k, seed):
     watermark = watermark * k 
     return watermark
 
+def watermarked(image_path, watermark, k):
+    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    watermarked = image + k * watermark
+    watermarked = np.clip(watermarked, 0, 255)
+    return watermarked.astype(np.int16)
 
-def encoding(result_image, image_path, k, seed):
+def watermarking(result_image, image_path, k, seed):
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     image = np.array(image, dtype=np.int16)
-    image_width, image_height = image.shape[:2]
-    watermark = watermarking(image_height, image_width, k, seed)
-    results = cv2.add(image, watermark)
-    cv2.imwrite(result_image + ".png", results)
-    print("Hasil telah tersimpan di root folder!")
+    wm = watermark(image_path, k, seed)
+    watermarked = cv2.add(image, wm)
+    cv2.imwrite(result_image + ".png", watermarked)
+    shutil.move(result_image + ".png", "output")
+    print("Hasil telah tersimpan pada folder output!")
 
